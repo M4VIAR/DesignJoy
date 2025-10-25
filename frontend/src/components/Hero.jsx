@@ -70,7 +70,7 @@ const Hero = () => {
                 className="bg-[#D4A574] hover:bg-[#C9A069] text-white px-8 py-6 text-lg font-medium shadow-lg hover:shadow-xl"
               >
                 <Calendar className="mr-2 h-5 w-5" />
-                Request a Call
+                Discovery Call - 15 minutes
               </Button>
               <Button
                 onClick={() => document.getElementById('contact').scrollIntoView({ behavior: 'smooth' })}
