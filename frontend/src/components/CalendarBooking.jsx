@@ -70,7 +70,7 @@ const CalendarBooking = ({ onClose }) => {
         description: "Tu llamada de descubrimiento ha sido agendada."
       });
 
-      setStep(3);
+      setStep(4);
     } catch (error) {
       console.error('Booking error:', error);
       toast({
