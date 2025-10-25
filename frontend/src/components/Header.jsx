@@ -39,25 +39,33 @@ const Header = () => {
           <nav className="hidden md:flex items-center space-x-8">
             <button
               onClick={() => scrollToSection('about')}
-              className="text-[#4A4238] hover:text-[#D4A574] transition-colors duration-300 font-medium"
+              className={`hover:text-[#D4A574] transition-colors duration-300 font-medium ${
+                isScrolled ? 'text-[#4A4238]' : 'text-white'
+              }`}
             >
               About
             </button>
             <button
               onClick={() => scrollToSection('services')}
-              className="text-[#4A4238] hover:text-[#D4A574] transition-colors duration-300 font-medium"
+              className={`hover:text-[#D4A574] transition-colors duration-300 font-medium ${
+                isScrolled ? 'text-[#4A4238]' : 'text-white'
+              }`}
             >
               Services
             </button>
             <button
               onClick={() => scrollToSection('gallery')}
-              className="text-[#4A4238] hover:text-[#D4A574] transition-colors duration-300 font-medium"
+              className={`hover:text-[#D4A574] transition-colors duration-300 font-medium ${
+                isScrolled ? 'text-[#4A4238]' : 'text-white'
+              }`}
             >
               Gallery
             </button>
             <button
               onClick={() => scrollToSection('contact')}
-              className="text-[#4A4238] hover:text-[#D4A574] transition-colors duration-300 font-medium"
+              className={`hover:text-[#D4A574] transition-colors duration-300 font-medium ${
+                isScrolled ? 'text-[#4A4238]' : 'text-white'
+              }`}
             >
               Contact
             </button>
