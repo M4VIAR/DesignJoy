@@ -103,7 +103,7 @@ const CalendarBooking = ({ onClose }) => {
         });
         return;
       }
-      handleGoogleAuth();
+      setStep(3);
       return;
     }
     setStep(step + 1);
