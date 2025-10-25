@@ -1,41 +1,11 @@
 import React, { useState } from 'react';
 import { Calendar, Phone } from 'lucide-react';
 import { Button } from './ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog';
-import { Input } from './ui/input';
-import { Label } from './ui/label';
-import { Textarea } from './ui/textarea';
-import { mockBookingRequest } from '../mock';
-import { useToast } from '../hooks/use-toast';
+import { Dialog, DialogContent } from './ui/dialog';
+import CalendarBooking from './CalendarBooking';
 
 const Hero = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [formData, setFormData] = useState({ name: '', email: '', phone: '', message: '' });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const { toast } = useToast();
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    
-    try {
-      await mockBookingRequest(formData);
-      toast({
-        title: "Request Submitted!",
-        description: "We'll get back to you within 24 hours.",
-      });
-      setIsDialogOpen(false);
-      setFormData({ name: '', email: '', phone: '', message: '' });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Something went wrong. Please try again.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
 
   return (
     <section className="relative h-screen w-full overflow-hidden grain-overlay">
