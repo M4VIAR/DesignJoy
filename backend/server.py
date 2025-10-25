@@ -67,8 +67,24 @@ async def get_status_checks():
     
     return status_checks
 
-# Include the router in the main app
+# Middleware to inject db into request state
+@app.middleware("http")
+async def add_db_to_request(request: Request, call_next):
+    request.state.db = db
+    response = await call_next(request)
+    return response
+
+# Dependency to get db from request
+async def get_db(request: Request):
+    return request.state.db
+
+# Update calendar router to use db dependency
+for route in calendar_router.routes:
+    route.dependencies = [get_db]
+
+# Include the routers in the main app
 app.include_router(api_router)
+app.include_router(calendar_router, prefix="/api")
 
 app.add_middleware(
     CORSMiddleware,
