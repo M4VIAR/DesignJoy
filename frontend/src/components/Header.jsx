@@ -31,7 +31,7 @@ const Header = () => {
       <div className="max-w-7xl mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="text-2xl font-semibold tracking-wide" style={{ fontFamily: 'var(--font-heading)' }}>
-            <span className="text-[#4A4238]">Designs with</span>
+            <span className={isScrolled ? 'text-[#4A4238]' : 'text-white'}>Designs with</span>
             <span className="text-[#D4A574] ml-2">Joy</span>
           </div>
 
