@@ -58,7 +58,7 @@ const Contact = () => {
               </div>
               <div>
                 <h3 className="text-xl font-medium text-[#4A4238] mb-1">Phone</h3>
-                <p className="text-[#8B7E74]">+1 (555) 123-4567</p>
+                <p className="text-[#8B7E74]">+1 267-291-4457</p>
               </div>
             </div>
 
@@ -78,7 +78,7 @@ const Contact = () => {
               </div>
               <div>
                 <h3 className="text-xl font-medium text-[#4A4238] mb-1">Location</h3>
-                <p className="text-[#8B7E74]">123 Design Avenue<br />New York, NY 10001</p>
+                <p className="text-[#8B7E74]">1862 Tollgate Rd<br />Palm  PA 18070</p>
               </div>
             </div>
 
@@ -96,7 +96,7 @@ const Contact = () => {
                 </p>
                 <p className="flex justify-between">
                   <span>Saturday:</span>
-                  <span className="font-medium">10:00 AM - 4:00 PM</span>
+                  <span className="font-medium">Closed</span>
                 </p>
                 <p className="flex justify-between">
                   <span>Sunday:</span>
@@ -140,7 +140,7 @@ const Contact = () => {
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                   className="mt-2"
-                  placeholder="+1 (555) 123-4567"
+                  placeholder="(555) 123-4567"
                 />
               </div>
               <div>

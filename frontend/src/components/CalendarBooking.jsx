@@ -167,24 +167,33 @@ const CalendarBooking = ({ onClose }) => {
     return today.toISOString().split('T')[0];
   };
 
+  const stepLabels = ['Datos', 'Agendar', 'Confirmar', 'Listo'];
+
   return (
     <div className="w-full max-w-2xl mx-auto p-6">
       {/* Progress Indicator */}
       <div className="flex items-center justify-center mb-8">
         {[1, 2, 3, 4].map((num) => (
           <React.Fragment key={num}>
-            <div
-              className={`w-10 h-10 rounded-full flex items-center justify-center font-medium ${
-                step >= num
-                  ? 'bg-[#D4A574] text-white'
-                  : 'bg-[#E8DCC8] text-[#8B7E74]'
-              }`}
-            >
-              {step > num ? <Check size={20} /> : num}
+            <div className="flex flex-col items-center">
+              <div
+                className={`w-10 h-10 rounded-full flex items-center justify-center font-medium mb-2 ${
+                  step >= num
+                    ? 'bg-[#D4A574] text-white'
+                    : 'bg-[#E8DCC8] text-[#8B7E74]'
+                }`}
+              >
+                {step > num ? <Check size={20} /> : num}
+              </div>
+              <span className={`text-xs font-medium ${
+                step >= num ? 'text-[#D4A574]' : 'text-[#8B7E74]'
+              }`}>
+                {stepLabels[num - 1]}
+              </span>
             </div>
             {num < 4 && (
               <div
-                className={`w-12 h-1 ${
+                className={`w-12 h-1 mt-[-20px] ${
                   step > num ? 'bg-[#D4A574]' : 'bg-[#E8DCC8]'
                 }`}
               />
