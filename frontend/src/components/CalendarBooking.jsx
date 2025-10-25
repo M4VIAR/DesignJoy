@@ -36,67 +36,6 @@ const CalendarBooking = ({ onClose }) => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleGoogleAuth = async () => {
-    try {
-      setLoading(true);
-      
-      // Start OAuth flow
-      const response = await axios.post(`${API}/calendar/auth/start`, {
-        email: formData.email,
-        name: formData.name
-      });
-
-      // Open OAuth popup
-      const width = 600;
-      const height = 700;
-      const left = window.screenX + (window.outerWidth - width) / 2;
-      const top = window.screenY + (window.outerHeight - height) / 2;
-      
-      const popup = window.open(
-        response.data.authorization_url,
-        'Google Calendar Authorization',
-        `width=${width},height=${height},left=${left},top=${top}`
-      );
-
-      // Listen for OAuth callback
-      const checkPopup = setInterval(async () => {
-        if (popup.closed) {
-          clearInterval(checkPopup);
-          
-          // Check if user is authenticated
-          const statusResponse = await axios.get(
-            `${API}/calendar/auth/status?email=${encodeURIComponent(formData.email)}`
-          );
-          
-          if (statusResponse.data.authenticated) {
-            setIsAuthenticated(true);
-            toast({
-              title: "Connected!",
-              description: "Your Google Calendar has been connected successfully."
-            });
-            setStep(3);
-          } else {
-            toast({
-              title: "Authentication Failed",
-              description: "Please try again.",
-              variant: "destructive"
-            });
-          }
-          setLoading(false);
-        }
-      }, 1000);
-
-    } catch (error) {
-      console.error('Auth error:', error);
-      toast({
-        title: "Error",
-        description: "Failed to start authentication. Please try again.",
-        variant: "destructive"
-      });
-      setLoading(false);
-    }
-  };
-
   const handleBooking = async () => {
     try {
       setLoading(true);
@@ -105,30 +44,38 @@ const CalendarBooking = ({ onClose }) => {
       const startDateTime = new Date(`${formData.date}T${formData.time}:00`);
       const endDateTime = new Date(startDateTime.getTime() + 15 * 60000); // Add 15 minutes
 
-      // Create calendar event
-      await axios.post(`${API}/calendar/events`, {
+      // Save booking to database
+      await axios.post(`${API}/bookings`, {
+        name: formData.name,
         email: formData.email,
-        title: 'Discovery Call - Interior Design Consultation',
-        description: `Discovery call with ${formData.name}\n\nPhone: ${formData.phone}\n\nMessage: ${formData.message || 'No additional message'}`,
-        start: startDateTime.toISOString(),
-        end: endDateTime.toISOString(),
-        attendees: [
-          { email: formData.email },
-          { email: 'hello@designswithjoy.com' }
-        ]
+        phone: formData.phone,
+        date: formData.date,
+        time: formData.time,
+        message: formData.message,
+        status: 'pending'
       });
+
+      // Generate Google Calendar link
+      const eventTitle = encodeURIComponent('Discovery Call - Interior Design Consultation with Designs with Joy');
+      const eventDetails = encodeURIComponent(`Consulta de diseño de interiores con ${formData.name}\n\nTeléfono: ${formData.phone}\nEmail: ${formData.email}\n\nMensaje: ${formData.message || 'Sin mensaje adicional'}`);
+      const startTime = startDateTime.toISOString().replace(/-|:|\.\d\d\d/g, '');
+      const endTime = endDateTime.toISOString().replace(/-|:|\.\d\d\d/g, '');
+      
+      const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${eventTitle}&details=${eventDetails}&dates=${startTime}/${endTime}&add=hello@designswithjoy.com`;
+      
+      setCalendarLink(googleCalendarUrl);
 
       toast({
-        title: "Booking Confirmed!",
-        description: "Your discovery call has been added to your Google Calendar."
+        title: "¡Reserva Confirmada!",
+        description: "Tu llamada de descubrimiento ha sido agendada."
       });
 
-      setStep(4);
+      setStep(3);
     } catch (error) {
       console.error('Booking error:', error);
       toast({
-        title: "Booking Failed",
-        description: error.response?.data?.detail || "Something went wrong. Please try again.",
+        title: "Error",
+        description: error.response?.data?.detail || "Algo salió mal. Por favor intenta de nuevo.",
         variant: "destructive"
       });
     } finally {
