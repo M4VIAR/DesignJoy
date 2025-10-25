@@ -6,10 +6,7 @@ import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { useToast } from '../hooks/use-toast';
-import axios from 'axios';
-
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
+// No need for axios or backend URL anymore
 
 const CalendarBooking = ({ onClose }) => {
   const [step, setStep] = useState(1);
@@ -43,17 +40,6 @@ const CalendarBooking = ({ onClose }) => {
       // Create start and end datetime
       const startDateTime = new Date(`${formData.date}T${formData.time}:00`);
       const endDateTime = new Date(startDateTime.getTime() + 15 * 60000); // Add 15 minutes
-
-      // Save booking to database
-      await axios.post(`${API}/bookings`, {
-        name: formData.name,
-        email: formData.email,
-        phone: formData.phone,
-        date: formData.date,
-        time: formData.time,
-        message: formData.message,
-        status: 'pending'
-      });
 
       // Generate Google Calendar link
       const eventTitle = encodeURIComponent('Discovery Call - Interior Design Consultation with Designs with Joy');
