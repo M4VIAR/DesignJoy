@@ -31,16 +31,17 @@ class AuthRequest(BaseModel):
     name: str
 
 @router.post("/auth/start")
-async def start_auth(request: AuthRequest, db):
+async def start_auth(auth_request: AuthRequest, request: Request):
     """Start Google OAuth flow"""
     try:
+        db = request.state.db
         authorization_url, state = get_authorization_url()
         
         # Store the state and user info temporarily
         await db.auth_states.insert_one({
             "state": state,
-            "email": request.email,
-            "name": request.name,
+            "email": auth_request.email,
+            "name": auth_request.name,
             "created_at": datetime.utcnow()
         })
         
@@ -49,9 +50,10 @@ async def start_auth(request: AuthRequest, db):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/auth/callback")
-async def auth_callback(code: str = Query(...), state: str = Query(...), db = None):
+async def auth_callback(code: str = Query(...), state: str = Query(...), request: Request = None):
     """Handle Google OAuth callback"""
     try:
+        db = request.state.db
         # Exchange code for tokens
         tokens, user_info = await exchange_code_for_tokens(code)
         
@@ -88,9 +90,10 @@ async def auth_callback(code: str = Query(...), state: str = Query(...), db = No
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/events")
-async def create_event(event: EventCreate, db):
+async def create_event(event: EventCreate, request: Request):
     """Create a calendar event"""
     try:
+        db = request.state.db
         created_event = await create_calendar_event(db, event.email, event.dict())
         return {
             "success": True,
@@ -101,18 +104,20 @@ async def create_event(event: EventCreate, db):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/events")
-async def get_events(email: str = Query(...), db = None):
+async def get_events(email: str = Query(...), request: Request = None):
     """Get upcoming calendar events"""
     try:
+        db = request.state.db
         events = await list_calendar_events(db, email)
         return {"success": True, "events": events}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/auth/status")
-async def check_auth_status(email: str = Query(...), db = None):
+async def check_auth_status(email: str = Query(...), request: Request = None):
     """Check if user is authenticated with Google Calendar"""
     try:
+        db = request.state.db
         user = await db.users.find_one({"email": email})
         is_authenticated = user and 'google_tokens' in user
         
