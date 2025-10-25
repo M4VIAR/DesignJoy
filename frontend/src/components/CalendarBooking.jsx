@@ -300,7 +300,7 @@ const CalendarBooking = ({ onClose }) => {
                   disabled={loading}
                   className="flex-1 bg-[#D4A574] hover:bg-[#C9A069] text-white"
                 >
-                  {loading ? 'Connecting...' : 'Connect Google Calendar'}
+                  {loading ? 'Processing...' : 'Continue'}
                 </Button>
               </div>
             </div>
