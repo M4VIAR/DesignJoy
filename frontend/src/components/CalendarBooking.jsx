@@ -6,10 +6,7 @@ import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { useToast } from '../hooks/use-toast';
-import axios from 'axios';
-
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
+// No need for axios or backend URL anymore
 
 const CalendarBooking = ({ onClose }) => {
   const [step, setStep] = useState(1);
@@ -22,7 +19,7 @@ const CalendarBooking = ({ onClose }) => {
     message: ''
   });
   const [loading, setLoading] = useState(false);
-  const [calendarLink, setCalendarLink] = useState('');
+  // Removed calendarLink state as we're opening calendar directly
   const { toast } = useToast();
 
   // Get available time slots
@@ -44,33 +41,26 @@ const CalendarBooking = ({ onClose }) => {
       const startDateTime = new Date(`${formData.date}T${formData.time}:00`);
       const endDateTime = new Date(startDateTime.getTime() + 15 * 60000); // Add 15 minutes
 
-      // Save booking to database
-      await axios.post(`${API}/bookings`, {
-        name: formData.name,
-        email: formData.email,
-        phone: formData.phone,
-        date: formData.date,
-        time: formData.time,
-        message: formData.message,
-        status: 'pending'
-      });
-
       // Generate Google Calendar link
       const eventTitle = encodeURIComponent('Discovery Call - Interior Design Consultation with Designs with Joy');
       const eventDetails = encodeURIComponent(`Consulta de diseño de interiores con ${formData.name}\n\nTeléfono: ${formData.phone}\nEmail: ${formData.email}\n\nMensaje: ${formData.message || 'Sin mensaje adicional'}`);
       const startTime = startDateTime.toISOString().replace(/-|:|\.\d\d\d/g, '');
       const endTime = endDateTime.toISOString().replace(/-|:|\.\d\d\d/g, '');
       
-      const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${eventTitle}&details=${eventDetails}&dates=${startTime}/${endTime}&add=hello@designswithjoy.com`;
+      // Agregar tu correo como invitado requerido al evento
+      const ownerEmail = 'metabad1@gmail.com'; // Cambia esto por tu correo
+      const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${eventTitle}&details=${eventDetails}&dates=${startTime}/${endTime}&add=${ownerEmail}&src=${ownerEmail}&recur=RRULE:FREQ=YEARLY;COUNT=1&trp=true`;
       
-      setCalendarLink(googleCalendarUrl);
+      // Abrir directamente Google Calendar
+      window.open(googleCalendarUrl, '_blank');
 
       toast({
-        title: "¡Reserva Confirmada!",
-        description: "Tu llamada de descubrimiento ha sido agendada."
+        title: "Abriendo Google Calendar",
+        description: "Por favor, completa la reserva en la ventana de Google Calendar que se abrió."
       });
 
-      setStep(4);
+      // Cerrar el modal después de abrir el calendario
+      onClose();
     } catch (error) {
       console.error('Booking error:', error);
       toast({
@@ -362,37 +352,7 @@ const CalendarBooking = ({ onClose }) => {
             </div>
           )}
 
-          {/* Step 4: Success */}
-          {step === 4 && (
-            <div className="text-center py-8">
-              <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Check size={40} className="text-green-600" />
-              </div>
-              <h3 className="text-2xl font-medium text-[#4A4238] mb-4" style={{ fontFamily: 'var(--font-heading)' }}>
-                ¡Reserva Confirmada!
-              </h3>
-              <p className="text-[#8B7E74] mb-6">
-                Tu llamada de descubrimiento ha sido agendada. Haz clic en el botón de abajo para agregar el evento a tu Google Calendar.
-              </p>
-              {calendarLink && (
-                <div className="mb-6">
-                  <Button
-                    onClick={() => window.open(calendarLink, '_blank')}
-                    className="bg-[#D4A574] hover:bg-[#C9A069] text-white mb-4"
-                  >
-                    Agregar a Google Calendar
-                  </Button>
-                </div>
-              )}
-              <Button
-                onClick={onClose}
-                variant="outline"
-                className="border-[#D4A574] text-[#D4A574] hover:bg-[#D4A574] hover:text-white"
-              >
-                Cerrar
-              </Button>
-            </div>
-          )}
+          {/* Success step removed as we're opening calendar directly */}
         </CardContent>
       </Card>
     </div>
