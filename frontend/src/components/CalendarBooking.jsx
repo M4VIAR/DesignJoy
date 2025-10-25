@@ -22,7 +22,7 @@ const CalendarBooking = ({ onClose }) => {
     message: ''
   });
   const [loading, setLoading] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [calendarLink, setCalendarLink] = useState('');
   const { toast } = useToast();
 
   // Get available time slots
