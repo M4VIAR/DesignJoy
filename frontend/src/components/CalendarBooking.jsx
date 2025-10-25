@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Calendar as CalendarIcon, Clock, User, Mail, MessageSquare, Check } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -6,7 +6,15 @@ import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { useToast } from '../hooks/use-toast';
-// No need for axios or backend URL anymore
+import emailjs from '@emailjs/browser';
+
+// Inicializar EmailJS
+const EMAILJS_PUBLIC_KEY = "sv3yL23sHzCoDRZL3";
+const EMAILJS_SERVICE_ID = "service_ecnyaog";
+const EMAILJS_TEMPLATE_ID = "template_cnn7szr";
+const ADMIN_EMAIL = "metabad1@gmail.com";
+
+emailjs.init(EMAILJS_PUBLIC_KEY);
 
 const CalendarBooking = ({ onClose }) => {
   const [step, setStep] = useState(1);
@@ -22,14 +30,49 @@ const CalendarBooking = ({ onClose }) => {
   // Removed calendarLink state as we're opening calendar directly
   const { toast } = useToast();
 
-  // Get available time slots
-  const timeSlots = [
-    '09:00', '09:30', '10:00', '10:30', '11:00', '11:30',
-    '14:00', '14:30', '15:00', '15:30', '16:00', '16:30'
-  ];
+  // Generate available time slots from 9 AM to 6 PM
+  const generateTimeSlots = (selectedDate) => {
+    const slots = [];
+    const currentDate = new Date();
+    const isToday = selectedDate && new Date(selectedDate).toDateString() === currentDate.toDateString();
+    
+    for (let hour = 9; hour < 18; hour++) {
+      for (let minute of ['00', '30']) {
+        const time = `${hour.toString().padStart(2, '0')}:${minute}`;
+        
+        // For today, only show future time slots
+        if (isToday) {
+          const slotTime = new Date(currentDate.toDateString() + ' ' + time);
+          if (slotTime <= new Date()) continue;
+        }
+        
+        slots.push(time);
+      }
+    }
+    return slots;
+  };
+
+  const [timeSlots, setTimeSlots] = useState(generateTimeSlots());
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+    
+    if (name === 'date') {
+      // Update available time slots when date changes
+      setTimeSlots(generateTimeSlots(value));
+      
+      // Clear selected time if it's no longer available
+      const newSlots = generateTimeSlots(value);
+      if (!newSlots.includes(formData.time)) {
+        setFormData(prev => ({ 
+          ...prev, 
+          [name]: value,
+          time: newSlots.length > 0 ? newSlots[0] : ''
+        }));
+        return;
+      }
+    }
+    
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
@@ -41,6 +84,56 @@ const CalendarBooking = ({ onClose }) => {
       const startDateTime = new Date(`${formData.date}T${formData.time}:00`);
       const endDateTime = new Date(startDateTime.getTime() + 15 * 60000); // Add 15 minutes
 
+      // Prepare email parameters
+      const templateParams = {
+        to_email: ADMIN_EMAIL,
+        from_name: formData.name,
+        client_email: formData.email,
+        client_phone: formData.phone,
+        message: formData.message || 'No additional message',
+        booking_date: startDateTime.toLocaleDateString('en-US', {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          hour: 'numeric',
+          minute: 'numeric',
+          hour12: true
+        })
+      };
+
+      console.log('Sending email with parameters:', templateParams);
+
+      try {
+        // Send email using EmailJS
+        const emailResponse = await emailjs.send(
+          EMAILJS_SERVICE_ID,
+          EMAILJS_TEMPLATE_ID,
+          templateParams
+        );
+
+        console.log('Email response:', emailResponse);
+
+        if (emailResponse.status !== 200) {
+          throw new Error('Failed to send notification email');
+        }
+
+        // Show success toast for email
+        toast({
+          title: "Notification Sent",
+          description: "We've sent you a confirmation email.",
+          variant: "success"
+        });
+      } catch (emailError) {
+        console.error('Email sending error:', emailError);
+        // Don't throw here, we still want to open the calendar
+        toast({
+          title: "Email Notification Failed",
+          description: "We couldn't send the confirmation email, but you can still proceed with the calendar booking.",
+          variant: "warning"
+        });
+      }
+
       // Generate Google Calendar link
       const eventTitle = encodeURIComponent('Discovery Call - Interior Design Consultation with Designs with Joy');
       const eventDetails = encodeURIComponent(`Consulta de diseño de interiores con ${formData.name}\n\nTeléfono: ${formData.phone}\nEmail: ${formData.email}\n\nMensaje: ${formData.message || 'Sin mensaje adicional'}`);
@@ -48,16 +141,24 @@ const CalendarBooking = ({ onClose }) => {
       const endTime = endDateTime.toISOString().replace(/-|:|\.\d\d\d/g, '');
       
       // Agregar tu correo como invitado requerido al evento
-      const ownerEmail = 'metabad1@gmail.com'; // Cambia esto por tu correo
-      const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${eventTitle}&details=${eventDetails}&dates=${startTime}/${endTime}&add=${ownerEmail}&src=${ownerEmail}&recur=RRULE:FREQ=YEARLY;COUNT=1&trp=true`;
+      // Create and open Google Calendar event
+      const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${eventTitle}&details=${eventDetails}&dates=${startTime}/${endTime}&add=${ADMIN_EMAIL}&src=${ADMIN_EMAIL}&recur=RRULE:FREQ=YEARLY;COUNT=1&trp=true`;
       
-      // Abrir directamente Google Calendar
-      window.open(googleCalendarUrl, '_blank');
+      // Attempt to open Google Calendar
+      const newWindow = window.open(googleCalendarUrl, '_blank');
 
-      toast({
-        title: "Abriendo Google Calendar",
-        description: "Por favor, completa la reserva en la ventana de Google Calendar que se abrió."
-      });
+      if (newWindow) {
+        toast({
+          title: "Opening Google Calendar",
+          description: "Please complete your booking in the Google Calendar window that just opened."
+        });
+      } else {
+        toast({
+          title: "Popup Blocked",
+          description: "Please allow popups and try again to complete your booking in Google Calendar.",
+          variant: "warning"
+        });
+      }
 
       // Cerrar el modal después de abrir el calendario
       onClose();
@@ -65,7 +166,7 @@ const CalendarBooking = ({ onClose }) => {
       console.error('Booking error:', error);
       toast({
         title: "Error",
-        description: error.response?.data?.detail || "Algo salió mal. Por favor intenta de nuevo.",
+        description: "Something went wrong. Please try again.",
         variant: "destructive"
       });
     } finally {
@@ -102,6 +203,12 @@ const CalendarBooking = ({ onClose }) => {
   const getTodayDate = () => {
     const today = new Date();
     return today.toISOString().split('T')[0];
+  };
+
+  // Function to check if a date is a weekend
+  const isWeekend = (dateString) => {
+    const date = new Date(dateString);
+    return date.getDay() === 0 || date.getDay() === 6;
   };
 
   const stepLabels = ['Datos', 'Agendar', 'Confirmar'];
@@ -232,7 +339,17 @@ const CalendarBooking = ({ onClose }) => {
                   type="date"
                   min={getTodayDate()}
                   value={formData.date}
-                  onChange={handleInputChange}
+                  onChange={(e) => {
+                    if (isWeekend(e.target.value)) {
+                      toast({
+                        title: "Weekend Selected",
+                        description: "Please select a weekday (Monday to Friday)",
+                        variant: "destructive"
+                      });
+                      return;
+                    }
+                    handleInputChange(e);
+                  }}
                   className="mt-2"
                   required
                 />
@@ -333,20 +450,30 @@ const CalendarBooking = ({ onClose }) => {
                 )}
               </div>
 
-              <div className="flex gap-4">
-                <Button
-                  onClick={() => setStep(2)}
-                  variant="outline"
-                  className="flex-1"
-                >
-                  Back
-                </Button>
+              <div className="flex flex-col gap-4">
                 <Button
                   onClick={handleBooking}
                   disabled={loading}
-                  className="flex-1 bg-[#D4A574] hover:bg-[#C9A069] text-white"
+                  className="w-full bg-[#D4A574] hover:bg-[#C9A069] text-white"
                 >
-                  {loading ? 'Booking...' : 'Confirm Booking'}
+                  {loading ? 'Booking...' : 'Confirm & Add to Calendar'}
+                </Button>
+                <Button
+                  onClick={() => {
+                    const phone = '+522491325762'; // Replace with your actual WhatsApp number
+                    const message = encodeURIComponent(`Hi! I'm ${formData.name} and I'd like to schedule a consultation.`);
+                    window.open(`https://wa.me/${phone}?text=${message}`, '_blank');
+                  }}
+                  className="w-full bg-[#25D366] hover:bg-[#128C7E] text-white"
+                >
+                  I Prefer WhatsApp Chat
+                </Button>
+                <Button
+                  onClick={() => setStep(2)}
+                  variant="outline"
+                  className="w-full"
+                >
+                  Back
                 </Button>
               </div>
             </div>
