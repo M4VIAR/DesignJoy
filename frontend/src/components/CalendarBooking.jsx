@@ -369,16 +369,27 @@ const CalendarBooking = ({ onClose }) => {
                 <Check size={40} className="text-green-600" />
               </div>
               <h3 className="text-2xl font-medium text-[#4A4238] mb-4" style={{ fontFamily: 'var(--font-heading)' }}>
-                Booking Confirmed!
+                ¡Reserva Confirmada!
               </h3>
               <p className="text-[#8B7E74] mb-6">
-                Your discovery call has been added to your Google Calendar. We've sent you a confirmation email with all the details.
+                Tu llamada de descubrimiento ha sido agendada. Haz clic en el botón de abajo para agregar el evento a tu Google Calendar.
               </p>
+              {calendarLink && (
+                <div className="mb-6">
+                  <Button
+                    onClick={() => window.open(calendarLink, '_blank')}
+                    className="bg-[#D4A574] hover:bg-[#C9A069] text-white mb-4"
+                  >
+                    Agregar a Google Calendar
+                  </Button>
+                </div>
+              )}
               <Button
                 onClick={onClose}
-                className="bg-[#D4A574] hover:bg-[#C9A069] text-white"
+                variant="outline"
+                className="border-[#D4A574] text-[#D4A574] hover:bg-[#D4A574] hover:text-white"
               >
-                Close
+                Cerrar
               </Button>
             </div>
           )}
