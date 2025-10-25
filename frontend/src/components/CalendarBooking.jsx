@@ -114,17 +114,17 @@ const CalendarBooking = ({ onClose }) => {
     return today.toISOString().split('T')[0];
   };
 
-  const stepLabels = ['Datos', 'Agendar', 'Confirmar', 'Listo'];
+  const stepLabels = ['Datos', 'Agendar', 'Confirmar'];
 
   return (
     <div className="w-full max-w-2xl mx-auto p-6">
       {/* Progress Indicator */}
       <div className="flex items-center justify-center mb-8">
-        {[1, 2, 3, 4].map((num) => (
+        {[1, 2, 3].map((num) => (
           <React.Fragment key={num}>
             <div className="flex flex-col items-center">
               <div
-                className={`w-10 h-10 rounded-full flex items-center justify-center font-medium mb-2 ${
+                className={`w-12 h-12 rounded-full flex items-center justify-center font-medium mb-2 ${
                   step >= num
                     ? 'bg-[#D4A574] text-white'
                     : 'bg-[#E8DCC8] text-[#8B7E74]'
@@ -132,15 +132,15 @@ const CalendarBooking = ({ onClose }) => {
               >
                 {step > num ? <Check size={20} /> : num}
               </div>
-              <span className={`text-xs font-medium ${
+              <span className={`text-sm font-medium ${
                 step >= num ? 'text-[#D4A574]' : 'text-[#8B7E74]'
               }`}>
                 {stepLabels[num - 1]}
               </span>
             </div>
-            {num < 4 && (
+            {num < 3 && (
               <div
-                className={`w-12 h-1 mt-[-20px] ${
+                className={`w-16 h-1 mt-[-24px] ${
                   step > num ? 'bg-[#D4A574]' : 'bg-[#E8DCC8]'
                 }`}
               />
