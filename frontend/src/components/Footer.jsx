@@ -56,6 +56,22 @@ const Footer = () => {
                   Contact
                 </button>
               </li>
+              <li>
+                <a
+                  href="/privacy.html"
+                  className="text-white/80 hover:text-[#D4A574] transition-colors duration-300"
+                >
+                  Privacy Policy
+                </a>
+              </li>
+              <li>
+                <a
+                  href="/terms.html"
+                  className="text-white/80 hover:text-[#D4A574] transition-colors duration-300"
+                >
+                  Terms of Use
+                </a>
+              </li>
             </ul>
           </div>
 
@@ -93,6 +109,9 @@ const Footer = () => {
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-white/70 text-sm">
               © 2025 Designs with Joy. All rights reserved.
+            </p>
+            <p className="text-white/70 text-sm">
+              <a href="/privacy.html" className="hover:text-[#D4A574]">Privacy Policy</a> · <a href="/terms.html" className="hover:text-[#D4A574]">Terms</a>
             </p>
             <p className="text-white/70 text-sm flex items-center gap-1">
               Made with <Heart className="h-4 w-4 text-[#D4A574] fill-current" /> for beautiful spaces
