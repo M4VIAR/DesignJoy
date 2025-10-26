@@ -20,6 +20,7 @@ const CalendarBooking = ({ onClose }) => {
     message: ''
   });
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState({ email: '', phone: '' });
   // Removed calendarLink state as we're opening calendar directly
   const { toast } = useToast();
 
@@ -88,6 +89,13 @@ const CalendarBooking = ({ onClose }) => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+    // Clear field-level errors as the user types
+    if (name === 'email' && errors.email) {
+      if (validateEmail(value)) setErrors(prev => ({ ...prev, email: '' }));
+    }
+    if (name === 'phone' && errors.phone) {
+      if (validatePhone(value)) setErrors(prev => ({ ...prev, phone: '' }));
+    }
     if (name === 'date') {
       // If user selects a weekend, adjust to next weekday
       let val = value;
@@ -195,12 +203,55 @@ const CalendarBooking = ({ onClose }) => {
     }
   };
 
+  // Simple validators for HTML-level and JS fallback validation
+  const validateEmail = (email) => {
+    if (!email) return false;
+    // Basic RFC-like email check (sufficient for client-side validation)
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  };
+
+  const validatePhone = (phone) => {
+    if (!phone) return false;
+    // Allow optional leading +, digits, spaces, dashes and parentheses. Minimum 7 digits.
+    return /^\+?[0-9\s\-()]{7,13}$/.test(phone);
+  };
+
   const nextStep = () => {
     if (step === 1) {
+      // Reset errors
+      setErrors({ email: '', phone: '' });
+
+      const newErrors = { email: '', phone: '' };
+
       if (!formData.name || !formData.email || !formData.phone) {
+        if (!formData.email) newErrors.email = 'Required';
+        if (!formData.phone) newErrors.phone = 'Required';
+        setErrors(newErrors);
         toast({
           title: "Missing Information",
           description: "Please fill in all required fields.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      if (!validateEmail(formData.email)) {
+        newErrors.email = 'Please enter a valid email address.';
+        setErrors(newErrors);
+        toast({
+          title: "Invalid Email",
+          description: "Please enter a valid email address.",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      if (!validatePhone(formData.phone)) {
+        newErrors.phone = 'Please enter a valid phone number.';
+        setErrors(newErrors);
+        toast({
+          title: "Invalid Phone",
+          description: "Please enter a valid phone number (digits, +, spaces, dashes allowed).",
           variant: "destructive"
         });
         return;
@@ -273,6 +324,12 @@ const CalendarBooking = ({ onClose }) => {
         </CardHeader>
 
         <CardContent>
+          {/* Top-level error banner for step 1 */}
+          {step === 1 && (errors.email || errors.phone) && (
+            <div className="mb-4 p-3 rounded border bg-red-50 border-red-200 text-red-800">
+              Please fix the highlighted fields below before continuing.
+            </div>
+          )}
           {/* Step 1: Contact Information */}
           {step === 1 && (
             <div className="space-y-4">
@@ -304,9 +361,14 @@ const CalendarBooking = ({ onClose }) => {
                   value={formData.email}
                   onChange={handleInputChange}
                   placeholder="john@example.com"
-                  className="mt-2"
+                  className={`${errors.email ? 'border-red-500 focus:border-red-500' : ''} mt-2`}
                   required
+                  autoComplete="email"
+                  title="Please enter a valid email address"
                 />
+                {errors.email && (
+                  <p className="text-sm text-red-600 mt-1">{errors.email}</p>
+                )}
               </div>
 
               <div>
@@ -321,9 +383,17 @@ const CalendarBooking = ({ onClose }) => {
                   value={formData.phone}
                   onChange={handleInputChange}
                   placeholder="+1 (555) 123-4567"
-                  className="mt-2"
+                  className={`${errors.phone ? 'border-red-500 focus:border-red-500' : ''} mt-2`}
                   required
+                  inputMode="tel"
+                  autoComplete="tel"
+                  pattern="^\\+?[0-9\\s\\-()]{7,}$"
+                  title="Phone number should contain at least 7 digits and may include +, spaces, dashes or parentheses"
+                  maxLength={20}
                 />
+                {errors.phone && (
+                  <p className="text-sm text-red-600 mt-1">{errors.phone}</p>
+                )}
               </div>
 
               <Button
@@ -463,7 +533,7 @@ const CalendarBooking = ({ onClose }) => {
                 
                 <Button
                   onClick={() => {
-                    const phone = '+1 4842138870'; // Replace with your actual WhatsApp number (country code + number)
+                    const phone = '+12679941906'; // Replace with your actual WhatsApp number (country code + number)
                     const bookingDateStr = formData.date && formData.time ? ` on ${formData.date} at ${formData.time}` : '';
                     const message = encodeURIComponent(`Hi! I'm ${formData.name || ''} and I'd like to schedule a consultation${bookingDateStr}.`);
                     window.open(`https://wa.me/${phone.replace(/\+/g, '')}?text=${message}`, '_blank');

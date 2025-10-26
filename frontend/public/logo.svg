@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="200" height="200" role="img" aria-labelledby="logoTitle">
+  <title id="logoTitle">DesignJoy logo</title>
+  <rect width="100" height="100" rx="18" fill="#4A4238" />
+  <g transform="translate(50,50)">
+    <path d="M-18 12 C -6 8, -6 -8, -18 -12" fill="none" stroke="#D4A574" stroke-width="6" stroke-linecap="round" />
+    <circle cx="14" cy="0" r="12" fill="#D4A574" />
+  </g>
+</svg>

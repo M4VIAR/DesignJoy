@@ -6,11 +6,56 @@ import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import { mockContactSubmit } from '../mock';
 import { useToast } from '../hooks/use-toast';
+import emailjs from '@emailjs/browser';
 
 const Contact = () => {
   const [formData, setFormData] = useState({ name: '', email: '', phone: '', message: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+
+  // Subscription state (for the small subscribe field in the header of the contact section)
+  const [subscriptionEmail, setSubscriptionEmail] = useState('');
+  const [isSubscribing, setIsSubscribing] = useState(false);
+
+  const handleSubscribe = async (e) => {
+    e.preventDefault();
+    const email = (subscriptionEmail || '').trim();
+    if (!email) {
+      toast({ title: 'Please enter an email', variant: 'destructive' });
+      return;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      toast({ title: 'Invalid email', description: 'Please enter a valid email address.', variant: 'destructive' });
+      return;
+    }
+
+    setIsSubscribing(true);
+    try {
+      // Send via EmailJS. Make sure you've set these environment variables.
+      const serviceID = process.env.REACT_APP_EMAILJS_SERVICE_ID || process.env.VITE_EMAILJS_SERVICE_ID || 'your_service_id';
+      const templateID = process.env.REACT_APP_EMAILJS_TEMPLATE_ID || process.env.VITE_EMAILJS_TEMPLATE_ID || 'subscription_template';
+      const publicKey = process.env.REACT_APP_EMAILJS_PUBLIC_KEY || process.env.VITE_EMAILJS_PUBLIC_KEY || 'your_public_key';
+
+      const templateParams = {
+        user_email: email,
+        referrer: window.location.href,
+        date: new Date().toISOString(),
+        note: ''
+      };
+
+      await emailjs.send(serviceID, templateID, templateParams, publicKey);
+
+      // EmailJS will deliver to the destination configured in the template/service (your email).
+      toast({ title: 'Subscribed', description: "Subscriber sent — you'll receive the notification." });
+      setSubscriptionEmail('');
+    } catch (err) {
+      console.error('EmailJS error', err);
+      toast({ title: 'Subscription failed', description: 'Please try again later.', variant: 'destructive' });
+    } finally {
+      setIsSubscribing(false);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -32,12 +77,49 @@ const Contact = () => {
     } finally {
       setIsSubmitting(false);
     }
+     /* Para suscripción */
+              const sendSubscription = (email) => {
+              const serviceID = 'service_ecnyaog';
+              const templateID = 'subscription_template'; // coincide con el template en EmailJS
+              const publicKey = 'sv3yL23sHzCoDRZL3';
+              const templateParams = {
+              user_email: email,
+              referrer: window.location.href,
+              date: new Date().toISOString(),
+              note: ''
+              };
+              return emailjs.send(serviceID, templateID, templateParams, publicKey);
+              };
   };
 
   return (
     <section id="contact" className="py-24 bg-[#F5F1E8]">
       <div className="max-w-7xl mx-auto px-6">
         <div className="text-center mb-16">
+          <div className="subscribe">
+              <span>Subscribe for updates</span>
+            {/* Simple subscription input — stores email locally and shows a toast. */}
+            <form onSubmit={handleSubscribe} className="flex items-center justify-center mt-2 space-x-2">
+             
+              <input
+                type="email"
+                value={subscriptionEmail}
+                onChange={(e) => setSubscriptionEmail(e.target.value)}
+                
+                placeholder="Your email"
+                aria-label="Email address for subscription"
+                className="px-4 py-2 rounded-md border border-gray-300 focus:outline-none"
+                required
+              />
+              <Button type="submit" disabled={isSubscribing} className="bg-[#D4A574] hover:bg-[#C9A069] text-white">
+                {isSubscribing ? 'Subscribing...' : 'Subscribe'}
+              </Button>
+
+              
+            </form>
+            
+          </div>
+          <br />
           <h2
             className="text-5xl md:text-6xl font-light text-[#4A4238] mb-4"
             style={{ fontFamily: 'var(--font-heading)' }}

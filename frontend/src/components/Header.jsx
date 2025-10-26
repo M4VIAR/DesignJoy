@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Logo from '../assets/dwj.png';
 import { Menu, X } from 'lucide-react';
 import { Button } from './ui/button';
 
@@ -31,8 +32,8 @@ const Header = () => {
       <div className="max-w-7xl mx-auto px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="text-2xl font-semibold tracking-wide" style={{ fontFamily: 'var(--font-heading)' }}>
-            <span className={isScrolled ? 'text-[#4A4238]' : 'text-white'}>Designs with</span>
-            <span className="text-[#D4A574] ml-2">Joy</span>
+          {/* Logo image (replaces previous text logo) */}
+          <img src={Logo} alt="DesignJoy logo" className="h-12 w-auto" />
           </div>
 
           {/* Desktop Navigation */}

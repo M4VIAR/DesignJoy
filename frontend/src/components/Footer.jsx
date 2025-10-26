@@ -1,4 +1,5 @@
 import React from 'react';
+import Logo from '../assets/dwj.png';
 import { Instagram, Facebook, Linkedin, Heart } from 'lucide-react';
 
 const Footer = () => {
@@ -12,7 +13,7 @@ const Footer = () => {
               className="text-3xl font-semibold mb-4"
               style={{ fontFamily: 'var(--font-heading)' }}
             >
-              Designs with <span className="text-[#D4A574]">Joy</span>
+              <img src={Logo} alt="DesignJoy logo" />
             </h3>
             <p className="text-white/80 leading-relaxed">
               Creating beautiful, functional spaces that bring joy to everyday living.
@@ -63,7 +64,7 @@ const Footer = () => {
             <h4 className="text-xl font-semibold mb-4">Follow Us</h4>
             <div className="flex gap-4">
               <a
-                href="#"
+                href="https://www.instagram.com/designswithjoy7/"
                 className="bg-white/10 p-3 rounded-full hover:bg-[#D4A574] transition-all duration-300 hover:scale-110"
                 aria-label="Instagram"
               >
@@ -91,7 +92,7 @@ const Footer = () => {
         <div className="border-t border-white/20 pt-8 mt-8">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-white/70 text-sm">
-              © 2024 Designs with Joy. All rights reserved.
+              © 2025 Designs with Joy. All rights reserved.
             </p>
             <p className="text-white/70 text-sm flex items-center gap-1">
               Made with <Heart className="h-4 w-4 text-[#D4A574] fill-current" /> for beautiful spaces
