@@ -323,7 +323,7 @@ const CalendarBooking = ({ onClose }) => {
           </CardDescription>
         </CardHeader>
 
-        <CardContent>
+  <CardContent className="max-h-[70vh] overflow-auto pb-6">
           {/* Top-level error banner for step 1 */}
           {step === 1 && (errors.email || errors.phone) && (
             <div className="mb-4 p-3 rounded border bg-red-50 border-red-200 text-red-800">

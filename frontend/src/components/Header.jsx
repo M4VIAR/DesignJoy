@@ -83,7 +83,7 @@ const Header = () => {
 
         {/* Mobile Navigation */}
         {isMobileMenuOpen && (
-          <nav className="md:hidden mt-4 pb-4 flex flex-col space-y-4">
+          <nav className="md:hidden mt-4 pb-4 flex flex-col space-y-4 bg-white/95 backdrop-blur-md rounded-md p-4 shadow-md">
             <button
               onClick={() => scrollToSection('about')}
               className="text-[#4A4238] hover:text-[#D4A574] transition-colors duration-300 font-medium text-left"
