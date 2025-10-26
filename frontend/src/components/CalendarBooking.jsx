@@ -6,6 +6,7 @@ import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { useToast } from '../hooks/use-toast';
+import emailjs from '@emailjs/browser';
 // No need for axios or backend URL anymore
 
 const CalendarBooking = ({ onClose }) => {
@@ -22,14 +23,96 @@ const CalendarBooking = ({ onClose }) => {
   // Removed calendarLink state as we're opening calendar directly
   const { toast } = useToast();
 
-  // Get available time slots
-  const timeSlots = [
-    '09:00', '09:30', '10:00', '10:30', '11:00', '11:30',
-    '14:00', '14:30', '15:00', '15:30', '16:00', '16:30'
-  ];
+  // EmailJS configuration (replace with your real keys if different)
+  const EMAILJS_PUBLIC_KEY = 'sv3yL23sHzCoDRZL3';
+  const EMAILJS_SERVICE_ID = 'service_ecnyaog';
+  const EMAILJS_TEMPLATE_ID = 'template_830nktt';
+  const ADMIN_EMAIL = 'metabad1@gmail.com';
+
+  // initialize EmailJS
+  try {
+    emailjs.init(EMAILJS_PUBLIC_KEY);
+  } catch (e) {
+    // ignore init errors during SSR or if already initialized
+  }
+
+  // Helpers for dates and times
+  const getTodayDate = (d = new Date()) => {
+    const today = d;
+    return today.toISOString().split('T')[0];
+  };
+
+  const isWeekend = (dateString) => {
+    const date = new Date(dateString + 'T00:00:00');
+    const day = date.getDay();
+    return day === 0 || day === 6;
+  };
+
+  const getNextWeekday = (dateString) => {
+    const date = new Date(dateString + 'T00:00:00');
+    while (date.getDay() === 0 || date.getDay() === 6) {
+      date.setDate(date.getDate() + 1);
+    }
+    return getTodayDate(date);
+  };
+
+  // Generate slots from 09:00 to 18:00 in 30-min steps, optionally filtering past slots for today
+  const generateTimeSlots = (selectedDate) => {
+    const slots = [];
+    const startHour = 9;
+    const endHour = 18; // exclusive
+    const now = new Date();
+    const isToday = selectedDate && (new Date(selectedDate + 'T00:00:00').toDateString() === new Date().toDateString());
+
+    for (let h = startHour; h < endHour; h++) {
+      for (let m of [0, 30]) {
+        const hh = String(h).padStart(2, '0');
+        const mm = String(m).padStart(2, '0');
+        const t = `${hh}:${mm}`;
+        if (isToday) {
+          const slotDt = new Date(`${selectedDate}T${t}:00`);
+          if (slotDt <= now) continue; // skip past slots
+        }
+        slots.push(t);
+      }
+    }
+    return slots;
+  };
+
+  const getNextAvailableSlot = (selectedDate) => {
+    const slots = generateTimeSlots(selectedDate || getTodayDate());
+    return slots.length > 0 ? slots[0] : '';
+  };
+
+  const [timeSlots, setTimeSlots] = useState(generateTimeSlots());
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+    if (name === 'date') {
+      // If user selects a weekend, adjust to next weekday
+      let val = value;
+      if (!val) {
+        setFormData(prev => ({ ...prev, [name]: value }));
+        return;
+      }
+      if (isWeekend(val)) {
+        const adjusted = getNextWeekday(val);
+        toast({
+          title: 'Weekend not allowed',
+          description: 'Weekends are not available. Date adjusted to next weekday.',
+          variant: 'destructive'
+        });
+        val = adjusted;
+      }
+
+      // Update time slots for the selected date and set default time to next available
+      const slots = generateTimeSlots(val);
+      setTimeSlots(slots);
+      const nextSlot = slots.length > 0 ? slots[0] : '';
+      setFormData(prev => ({ ...prev, date: val, time: nextSlot }));
+      return;
+    }
+
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
@@ -55,32 +138,57 @@ const CalendarBooking = ({ onClose }) => {
       const startDateTime = new Date(`${formData.date}T${formData.time}:00`);
       const endDateTime = new Date(startDateTime.getTime() + 15 * 60000); // Add 15 minutes
 
+      // Send notification email via EmailJS (best-effort)
+      const templateParams = {
+        name: formData.name,
+        from_name: formData.name,
+        client_email: formData.email,
+        client_phone: formData.phone,
+        booking_date: startDateTime.toLocaleString(),
+        message: formData.message || 'No additional message',
+        email: ADMIN_EMAIL // This is the recipient's email
+      };
+
+      try {
+        const emailResp = await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams);
+        console.log('EmailJS response:', emailResp);
+        toast({ title: 'Notification Sent', description: 'A notification email was sent.', variant: 'default' });
+      } catch (emailErr) {
+        console.error('EmailJS error:', emailErr);
+        toast({ title: 'Email Failed', description: 'Could not send notification email — continuing to calendar.', variant: 'warning' });
+      }
+
       // Generate Google Calendar link
       const eventTitle = encodeURIComponent('Discovery Call - Interior Design Consultation with Designs with Joy');
       const eventDetails = encodeURIComponent(`Consulta de diseño de interiores con ${formData.name}\n\nTeléfono: ${formData.phone}\nEmail: ${formData.email}\n\nMensaje: ${formData.message || 'Sin mensaje adicional'}`);
       const startTime = startDateTime.toISOString().replace(/-|:|\.\d\d\d/g, '');
       const endTime = endDateTime.toISOString().replace(/-|:|\.\d\d\d/g, '');
-      
-      // Agregar tu correo como invitado requerido al evento
-      const ownerEmail = 'metabad1@gmail.com'; // Cambia esto por tu correo
-      const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${eventTitle}&details=${eventDetails}&dates=${startTime}/${endTime}&add=${ownerEmail}&src=${ownerEmail}&recur=RRULE:FREQ=YEARLY;COUNT=1&trp=true`;
-      
-      // Abrir directamente Google Calendar
-      window.open(googleCalendarUrl, '_blank');
 
-      toast({
-        title: "Abriendo Google Calendar",
-        description: "Por favor, completa la reserva en la ventana de Google Calendar que se abrió."
-      });
+      const ownerEmail = ADMIN_EMAIL;
+      const googleCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${eventTitle}&details=${eventDetails}&dates=${startTime}/${endTime}&add=${ownerEmail}&src=${ownerEmail}&trp=true`;
+
+      const newWindow = window.open(googleCalendarUrl, '_blank');
+      if (newWindow) {
+        toast({
+          title: 'Opening Google Calendar',
+          description: 'Please complete your booking in the Google Calendar window that just opened.'
+        });
+      } else {
+        toast({
+          title: 'Popup Blocked',
+          description: 'Please allow popups and try again to complete your booking in Google Calendar.',
+          variant: 'warning'
+        });
+      }
 
       // Close modal
       onClose();
     } catch (error) {
       console.error('Booking error:', error);
       toast({
-        title: "Error",
-        description: error.response?.data?.detail || "Algo salió mal. Por favor intenta de nuevo.",
-        variant: "destructive"
+        title: 'Error',
+        description: 'Something went wrong. Please try again.',
+        variant: 'destructive'
       });
     } finally {
       setLoading(false);
@@ -111,11 +219,6 @@ const CalendarBooking = ({ onClose }) => {
       return;
     }
     setStep(step + 1);
-  };
-
-  const getTodayDate = () => {
-    const today = new Date();
-    return today.toISOString().split('T')[0];
   };
 
   const stepLabels = ['Datos', 'Agendar', 'Confirmar'];
@@ -246,17 +349,7 @@ const CalendarBooking = ({ onClose }) => {
                   type="date"
                   min={minSelectableDate}
                   value={formData.date}
-                  onChange={(e) => {
-                    if (isWeekend(e.target.value)) {
-                      toast({
-                        title: "Weekend Selected",
-                        description: "Please select a weekday (Monday to Friday)",
-                        variant: "destructive"
-                      });
-                      return;
-                    }
-                    handleInputChange(e);
-                  }}
+                  onChange={handleInputChange}
                   className="mt-2"
                   required
                 />
@@ -357,7 +450,30 @@ const CalendarBooking = ({ onClose }) => {
                 )}
               </div>
 
-              <div className="flex gap-4">
+              <div className="flex flex-col gap-3">
+
+                
+                <Button
+                  onClick={handleBooking}
+                  disabled={loading}
+                  className="w-full bg-[#D4A574] hover:bg-[#C9A069] text-white"
+                >
+                  {loading ? 'Booking...' : 'Confirm & Add to Calendar'}
+                </Button>
+                
+                <Button
+                  onClick={() => {
+                    const phone = '+1 4842138870'; // Replace with your actual WhatsApp number (country code + number)
+                    const bookingDateStr = formData.date && formData.time ? ` on ${formData.date} at ${formData.time}` : '';
+                    const message = encodeURIComponent(`Hi! I'm ${formData.name || ''} and I'd like to schedule a consultation${bookingDateStr}.`);
+                    window.open(`https://wa.me/${phone.replace(/\+/g, '')}?text=${message}`, '_blank');
+                  }}
+                  className="w-full bg-[#25D366] hover:bg-[#128C7E] text-white"
+                >
+                  I Prefer WhatsApp Chat
+                </Button>
+
+
                 <Button
                   onClick={() => setStep(2)}
                   variant="outline"
