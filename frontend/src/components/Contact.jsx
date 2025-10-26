@@ -79,16 +79,16 @@ const Contact = () => {
     }
      /* Para suscripción */
               const sendSubscription = (email) => {
-              const serviceID = 'service_ecnyaog';
-              const templateID = 'subscription_template'; // coincide con el template en EmailJS
-              const publicKey = 'sv3yL23sHzCoDRZL3';
-              const templateParams = {
-              user_email: email,
-              referrer: window.location.href,
-              date: new Date().toISOString(),
-              note: ''
-              };
-              return emailjs.send(serviceID, templateID, templateParams, publicKey);
+                const serviceID = process.env.REACT_APP_EMAILJS_SERVICE_ID || 'service_ecnyaog';
+                const templateID = process.env.REACT_APP_EMAILJS_TEMPLATE_ID || 'subscription_template'; // coincide con el template en EmailJS
+                const publicKey = process.env.REACT_APP_EMAILJS_PUBLIC_KEY || 'sv3yL23sHzCoDRZL3';
+                const templateParams = {
+                  user_email: email,
+                  referrer: window.location.href,
+                  date: new Date().toISOString(),
+                  note: ''
+                };
+                return emailjs.send(serviceID, templateID, templateParams, publicKey);
               };
   };
 

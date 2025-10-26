@@ -24,11 +24,12 @@ const CalendarBooking = ({ onClose }) => {
   // Removed calendarLink state as we're opening calendar directly
   const { toast } = useToast();
 
-  // EmailJS configuration (replace with your real keys if different)
-  const EMAILJS_PUBLIC_KEY = 'sv3yL23sHzCoDRZL3';
-  const EMAILJS_SERVICE_ID = 'service_ecnyaog';
-  const EMAILJS_TEMPLATE_ID = 'template_830nktt';
-  const ADMIN_EMAIL = 'metabad1@gmail.com';
+  // EmailJS / owner configuration - read from environment variables when available
+  const EMAILJS_PUBLIC_KEY = process.env.REACT_APP_EMAILJS_PUBLIC_KEY || 'sv3yL23sHzCoDRZL3';
+  const EMAILJS_SERVICE_ID = process.env.REACT_APP_EMAILJS_SERVICE_ID || 'service_ecnyaog';
+  const EMAILJS_TEMPLATE_ID = process.env.REACT_APP_EMAILJS_TEMPLATE_ID || 'template_830nktt';
+  const ADMIN_EMAIL = process.env.REACT_APP_ADMIN_EMAIL || 'metabad1@gmail.com';
+  const WHATSAPP_NUMBER = process.env.REACT_APP_WHATSAPP_NUMBER || '+12679941906';
 
   // initialize EmailJS
   try {
